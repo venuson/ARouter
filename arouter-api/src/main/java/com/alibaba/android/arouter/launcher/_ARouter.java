@@ -350,7 +350,22 @@ final class _ARouter {
                 }
 
                 // Navigation in main looper.
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                if (Looper.getMainLooper() == Looper.myLooper()) {
+                    if (requestCode > 0) {  // Need start for result
+                        ActivityCompat.startActivityForResult((Activity) currentContext, intent, requestCode, postcard.getOptionsBundle());
+                    } else {
+                        ActivityCompat.startActivity(currentContext, intent, postcard.getOptionsBundle());
+                    }
+
+                    if ((0 != postcard.getEnterAnim() || 0 != postcard.getExitAnim()) && currentContext instanceof Activity) {    // Old version.
+                        ((Activity) currentContext).overridePendingTransition(postcard.getEnterAnim(), postcard.getExitAnim());
+                    }
+
+                    if (null != callback) { // Navigation over.
+                        callback.onArrival(postcard);
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
                         if (requestCode > 0) {  // Need start for result
@@ -368,6 +383,8 @@ final class _ARouter {
                         }
                     }
                 });
+                }
+                
 
                 break;
             case PROVIDER:
